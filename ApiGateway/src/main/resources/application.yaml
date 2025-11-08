@@ -1,0 +1,37 @@
+server:
+  port: 8080
+  forward-headers-strategy: framework
+
+spring:
+  application:
+    name: api-gateway
+
+  cloud:
+    gateway:
+      routes:
+        - id: student-service
+          uri: http://student-service:8081
+          predicates:
+            - Path=/student/**
+        - id: college-service
+          uri: http://college-service:8082
+          predicates:
+            - Path=/college/**
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins:
+              - "http://localhost:8080"
+            allowedMethods: "*"
+            allowedHeaders: "*"
+            allowCredentials: true
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    config-url: /v3/api-docs/swagger-config
+    urls:
+      - name: student-service
+        url: /student/v3/api-docs
+      - name: college-service
+        url: /college/v3/api-docs
