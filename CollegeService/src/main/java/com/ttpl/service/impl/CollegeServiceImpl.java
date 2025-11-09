@@ -8,13 +8,18 @@ import com.ttpl.dto.response.StudentResponseDto;
 import com.ttpl.entity.College;
 import com.ttpl.repository.CollegeRepository;
 import com.ttpl.service.CollegeService;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
+import reactor.core.publisher.Mono;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -61,40 +66,63 @@ public class CollegeServiceImpl implements CollegeService {
             );
         } else {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(new ApiResponse<>("error", HttpStatus.NOT_FOUND.value(), "College not found!", null));
+                    .body(new ApiResponse<>("error", HttpStatus.NOT_FOUND.value(), "College not found!", Collections.emptyList()));
         }
     }
 
     @Override
     public ResponseEntity<?> getCollegeById(Long id) {
+
         Optional<College> optionalCollege = collegeRepository.findById(id);
 
         if (optionalCollege.isEmpty()) {
-            return ResponseEntity.ok(
-                    new ApiResponse<>("Error", HttpStatus.NOT_FOUND.value(), "College not found!", null)
-            );
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new ApiResponse<>(
+                            "Error",
+                            HttpStatus.NOT_FOUND.value(),
+                            "College not found!",
+                            null
+                    ));
         }
 
         College college = optionalCollege.get();
 
-        ResponseEntity<ApiResponse<List<StudentResponseDto>>> responseEntity =
-                studentServiceWebClient.getStudentsByClgCode(college.getClgCode()).block();
-
-        ApiResponse<List<StudentResponseDto>> studentApiResponse = responseEntity.getBody();
-        List<StudentResponseDto> students = null;
-
-        if (studentApiResponse != null) {
-            students = studentApiResponse.getData();
+        if (college.getClgCode() == null || college.getClgCode().isBlank()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new ApiResponse<>(
+                            "Error",
+                            HttpStatus.BAD_REQUEST.value(),
+                            "College code is missing!",
+                            null
+                    ));
         }
 
-        if (students != null && !students.isEmpty()) {
-            college.setStudents(students);
+        ResponseEntity<ApiResponse<List<StudentResponseDto>>> studentsByClgCode = null;
+        try {
+            studentsByClgCode = studentServiceWebClient.getStudentsByClgCode(college.getClgCode()).block();
+        } catch (Exception e) {
+            System.out.println("Error fetching students for college: " + e.getMessage());
         }
 
-        CollegeResponseDto responseDto = modelMapper.map(college, CollegeResponseDto.class);
+        if (studentsByClgCode != null && studentsByClgCode.getBody() != null) {
+            List<StudentResponseDto> data = studentsByClgCode.getBody().getData();
+            if (data != null) {
+                List<StudentResponseDto> list = data.stream()
+                        .map(student -> modelMapper.map(student, StudentResponseDto.class))
+                        .toList();
+                college.setStudents(list);
+            }
+        }
+
+        CollegeResponseDto response = modelMapper.map(college, CollegeResponseDto.class);
 
         return ResponseEntity.ok(
-                new ApiResponse<>("Success", HttpStatus.OK.value(), "College found successfully!", responseDto)
+                new ApiResponse<>(
+                        "Success",
+                        HttpStatus.OK.value(),
+                        "College found successfully!",
+                        response
+                )
         );
     }
 
@@ -170,7 +198,6 @@ public class CollegeServiceImpl implements CollegeService {
         );
     }
 
-
     @Override
     public ResponseEntity<?> deleteById(Long id) {
         Optional<College> college = collegeRepository.findById(id);
@@ -179,16 +206,14 @@ public class CollegeServiceImpl implements CollegeService {
 
             ResponseEntity<ApiResponse<List<StudentResponseDto>>> studentsByClgCode = studentServiceWebClient.getStudentsByClgCode(college.get().getClgCode()).block();
             List<StudentResponseDto> students = studentsByClgCode.getBody().getData();
-
-            for (var s : students) {
-                studentServiceWebClient.deleteByClgCode(s.getClgCode());
+            if (!students.isEmpty()) {
+                for (var s : students) {
+                    studentServiceWebClient.deleteByClgCode(s.getClgCode());
+                }
+                collegeRepository.deleteById(id);
             }
-
-            collegeRepository.deleteById(id);
             return ResponseEntity.ok(new ApiResponse<>("Success", HttpStatus.OK.value(), "College deleted Successfully!", null));
         }
-
-
         return ResponseEntity.ok(new ApiResponse<>("Success", HttpStatus.NOT_FOUND.value(), "College not found!", null));
     }
 

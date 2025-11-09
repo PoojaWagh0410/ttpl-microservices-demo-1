@@ -132,8 +132,9 @@ public class StudentServiceImpl implements StudentService {
         List<Student> students = studentRepository.findAllByClgCode(clgCode);
 
         if (students.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(new ApiResponse<>("Error", HttpStatus.NOT_FOUND.value(), "No students found for this college!", null));
+            return ResponseEntity.ok(
+                    new ApiResponse<>("Success", HttpStatus.OK.value(), "No students found for this college!", List.of())
+            );
         }
 
         List<StudentResponseDto> studentDtos = students.stream()

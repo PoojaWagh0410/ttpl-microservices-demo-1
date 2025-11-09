@@ -36,7 +36,7 @@ public class CollegeController {
         return collegeService.getByCollegeCode(code);
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/delete/{id}")
     public ResponseEntity deleteByClgId(@PathVariable Long id){
         return collegeService.deleteById(id);
     }
