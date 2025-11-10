@@ -9,4 +9,6 @@ public interface CollegeRepository extends JpaRepository<College, Long> {
 
     College findByClgCode(String code);
 
+    void deleteByClgCode(String code);
+
 }

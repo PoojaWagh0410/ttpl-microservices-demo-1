@@ -17,8 +17,7 @@ public class Student {
 
     private String name;
 
-    @Email(message = "Invalid email format!")
-    @Column(unique = true, nullable = false)
+
     private String email;
 
     @Column(unique = true,nullable = false)

@@ -9,6 +9,7 @@ import com.ttpl.entity.College;
 import com.ttpl.repository.CollegeRepository;
 import com.ttpl.service.CollegeService;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
@@ -126,8 +127,8 @@ public class CollegeServiceImpl implements CollegeService {
         );
     }
 
-
     @Override
+
     public ResponseEntity<?> getAllCollege() {
         List<College> colleges = collegeRepository.findAll();
 
@@ -199,25 +200,43 @@ public class CollegeServiceImpl implements CollegeService {
     }
 
     @Override
+    @Transactional
     public ResponseEntity<?> deleteById(Long id) {
-        Optional<College> college = collegeRepository.findById(id);
 
-        if (college.isPresent()) {
+        Optional<College> optionalCollege = collegeRepository.findById(id);
 
-            ResponseEntity<ApiResponse<List<StudentResponseDto>>> studentsByClgCode = studentServiceWebClient.getStudentsByClgCode(college.get().getClgCode()).block();
-            List<StudentResponseDto> students = studentsByClgCode.getBody().getData();
-            if (!students.isEmpty()) {
-                for (var s : students) {
-                    studentServiceWebClient.deleteByClgCode(s.getClgCode());
-                }
-                collegeRepository.deleteById(id);
-            }
-            return ResponseEntity.ok(new ApiResponse<>("Success", HttpStatus.OK.value(), "College deleted Successfully!", null));
+        if (optionalCollege.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new ApiResponse<>("Error", HttpStatus.NOT_FOUND.value(), "College not found!", null));
         }
-        return ResponseEntity.ok(new ApiResponse<>("Success", HttpStatus.NOT_FOUND.value(), "College not found!", null));
+
+        College college = optionalCollege.get();
+
+        try {
+            ResponseEntity<ApiResponse<List<StudentResponseDto>>> studentsByClgCode =
+                    studentServiceWebClient.getStudentsByClgCode(college.getClgCode()).block();
+
+            if (studentsByClgCode != null && studentsByClgCode.getBody() != null) {
+                List<StudentResponseDto> students = studentsByClgCode.getBody().getData();
+
+                if (students != null && !students.isEmpty()) {
+                    studentServiceWebClient.deleteByClgCode(college.getClgCode()).block();
+                }
+            }
+
+        } catch (Exception e) {
+            System.out.println("Error deleting students for college code " + college.getClgCode() + ": " + e.getMessage());
+        }
+
+        collegeRepository.deleteById(id);
+
+        return ResponseEntity.ok(
+                new ApiResponse<>("Success", HttpStatus.OK.value(), "College deleted successfully!", null)
+        );
     }
 
     @Override
+    @Transactional
     public ResponseEntity<?> deleteByClgCode(String code) {
         College byClgCode = collegeRepository.findByClgCode(code);
 
@@ -225,16 +244,27 @@ public class CollegeServiceImpl implements CollegeService {
             return ResponseEntity.ok(new ApiResponse<>("Success", HttpStatus.NOT_FOUND.value(), "College not found!", null));
         }
 
-        ResponseEntity<ApiResponse<List<StudentResponseDto>>> studentsByClgCode = studentServiceWebClient.getStudentsByClgCode(code).block();
-        List<StudentResponseDto> students = studentsByClgCode.getBody().getData();
+        try {
+            ResponseEntity<ApiResponse<List<StudentResponseDto>>> studentsByClgCode =
+                    studentServiceWebClient.getStudentsByClgCode(byClgCode.getClgCode()).block();
 
-        if (!students.isEmpty()) {
-            for (var s : students) {
-                studentServiceWebClient.deleteByClgCode(s.getClgCode());
+            if (studentsByClgCode != null && studentsByClgCode.getBody() != null) {
+                List<StudentResponseDto> students = studentsByClgCode.getBody().getData();
+
+                if (students != null && !students.isEmpty()) {
+                    studentServiceWebClient.deleteByClgCode(byClgCode.getClgCode()).block();
+                }
             }
+
+        } catch (Exception e) {
+            System.out.println("Error deleting students for college code " + byClgCode.getClgCode() + ": " + e.getMessage());
         }
-        collegeRepository.delete(byClgCode);
-        return ResponseEntity.ok(new ApiResponse<>("Success", HttpStatus.OK.value(), "College deleted successfully!", null));
+
+        collegeRepository.deleteByClgCode(code);
+
+        return ResponseEntity.ok(
+                new ApiResponse<>("Success", HttpStatus.OK.value(), "College deleted successfully!", null)
+        );
     }
 
 }

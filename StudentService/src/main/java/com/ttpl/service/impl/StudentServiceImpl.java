@@ -39,6 +39,13 @@ public class StudentServiceImpl implements StudentService {
                                 "Student with this email already exists!", null));
             }
 
+            Optional<Student> byPhone = studentRepository.findByPhone(dto.getPhone());
+            if(byPhone.isPresent()){
+                return ResponseEntity.status(HttpStatus.CONFLICT)
+                        .body(new ApiResponse<>("Error", HttpStatus.CONFLICT.value(),
+                                "Student with this phone number is already exists!", null));
+            }
+
             ResponseEntity<ApiResponse<CollegeResponseDto>> byClgCode =
                     collegeServiceWebClient.getByCollegeCode(dto.getClgCode()).block();
 
