@@ -1,6 +1,10 @@
+server:
+  port: 8081
+
 spring:
   application:
-    name: studentservice
+    name: student-service
+
   cloud:
     loadbalancer:
       retry:
@@ -21,12 +25,12 @@ spring:
         dialect: org.hibernate.dialect.MySQL8Dialect
         format_sql: true
 
-server:
-  port: 8081
-
-
 springdoc:
   api-docs:
     path: /student/v3/api-docs
   swagger-ui:
     path: /student/swagger-ui/index.html
+
+logging:
+  level:
+    org.springframework.security: INFO

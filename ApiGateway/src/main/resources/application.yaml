@@ -5,18 +5,27 @@ server:
 spring:
   application:
     name: api-gateway
+  main:
+    web-application-type: reactive
 
   cloud:
     gateway:
+      default-filters:
+        - TokenRelay
       routes:
         - id: student-service
           uri: http://student-service:8081
           predicates:
             - Path=/student/**
+          filters:
+            - RemoveRequestHeader=Cookie
         - id: college-service
           uri: http://college-service:8082
           predicates:
             - Path=/college/**
+          filters:
+            - RemoveRequestHeader=Cookie
+
       globalcors:
         corsConfigurations:
           '[/**]':
@@ -35,3 +44,7 @@ springdoc:
         url: /student/v3/api-docs
       - name: college-service
         url: /college/v3/api-docs
+
+logging:
+  level:
+    org.springframework.cloud.gateway: INFO

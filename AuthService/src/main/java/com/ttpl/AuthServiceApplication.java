@@ -2,14 +2,12 @@ package com.ttpl;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.cloud.netflix.eureka.server.EnableEurekaServer;
 
 @SpringBootApplication
-@EnableEurekaServer
-public class ServiceRegistryApplication {
+public class AuthServiceApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(ServiceRegistryApplication.class, args);
+		SpringApplication.run(AuthServiceApplication.class, args);
 	}
 
 }
