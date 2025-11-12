@@ -19,14 +19,54 @@ services:
     networks:
       - app-network
 
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.4.4
+    container_name: keycloak
+    command:
+      - start-dev
+    environment:
+      KC_DB: mysql
+      KC_DB_URL: jdbc:mysql://mysql:3306/keycloak_db
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: keycloak
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_HEALTH_ENABLED: true
+    ports:
+      - "8085:8080"
+    depends_on:
+      - mysql
+    networks:
+      - app-network
+
+  auth-service:
+    build:
+      context: ./AuthService
+      dockerfile: Dockerfile
+    image: auth-service:latest
+    container_name: auth-service
+    depends_on:
+      - keycloak
+    environment:
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://keycloak:8080/realms/college-student-demo
+      SPRING_APPLICATION_NAME: AuthService
+      SERVER_PORT: 8083
+    ports:
+      - "8083:8083"
+    networks:
+      - app-network
+
   college-service:
     build:
       context: ./CollegeService
       dockerfile: Dockerfile
     image: college-service:latest
+    container_name: college-service
     depends_on:
       mysql:
         condition: service_healthy
+      keycloak:
+        condition: service_started
     environment:
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/college_student_db?useSSL=false&allowPublicKeyRetrieval=true
       SPRING_DATASOURCE_USERNAME: root
@@ -42,9 +82,12 @@ services:
       context: ./StudentService
       dockerfile: Dockerfile
     image: student-service:latest
+    container_name: student-service
     depends_on:
       mysql:
         condition: service_healthy
+      keycloak:
+        condition: service_started
     environment:
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/college_student_db?useSSL=false&allowPublicKeyRetrieval=true
       SPRING_DATASOURCE_USERNAME: root
@@ -64,8 +107,10 @@ services:
     depends_on:
       - student-service
       - college-service
+      - auth-service
     environment:
       - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_APPLICATION_NAME=ApiGateway
     ports:
       - "8080:8080"
       - "5050:5050"

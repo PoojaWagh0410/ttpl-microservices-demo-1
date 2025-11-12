@@ -1,0 +1,16 @@
+server:
+  port: 8083
+
+spring:
+  application:
+    name: AuthService
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://keycloak:8080/realms/college-student-demo
+
+logging:
+  level:
+    org.springframework.security: INFO

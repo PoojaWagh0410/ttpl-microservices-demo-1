@@ -7,7 +7,7 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <module name="ApiGateway" />
-        <module name="ServiceRegistry" />
+        <module name="AuthService" />
       </profile>
       <profile name="Annotation profile for StudentService" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />
@@ -20,10 +20,14 @@
         <module name="StudentService" />
       </profile>
     </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="ServiceRegistry" target="21" />
+    </bytecodeTargetLevel>
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
       <module name="ApiGateway" options="-parameters" />
+      <module name="AuthService" options="-parameters" />
       <module name="CollegeService" options="-parameters" />
       <module name="ServiceRegistry" options="-parameters" />
       <module name="StudentService" options="-parameters" />
