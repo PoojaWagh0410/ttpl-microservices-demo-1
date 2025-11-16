@@ -2,12 +2,12 @@
 <project version="4">
   <component name="CompilerConfiguration">
     <annotationProcessing>
+      <profile default="true" name="Default" enabled="true" />
       <profile name="Maven default annotation processors profile" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <module name="ApiGateway" />
-        <module name="AuthService" />
       </profile>
       <profile name="Annotation profile for StudentService" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />
@@ -21,6 +21,7 @@
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
+      <module name="AuthService" target="21" />
       <module name="ServiceRegistry" target="21" />
     </bytecodeTargetLevel>
   </component>

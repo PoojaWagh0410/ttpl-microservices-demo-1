@@ -2,12 +2,14 @@ package com.ttpl.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.method.configuration.EnableReactiveMethodSecurity;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.web.server.SecurityWebFilterChain;
 
 @Configuration
 @EnableWebFluxSecurity
+@EnableReactiveMethodSecurity
 public class SecurityConfig {
 
     @Bean
@@ -15,7 +17,7 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable())
                 .authorizeExchange(exchange -> exchange
-                        // Allow Swagger + OpenAPI without auth
+
                         .pathMatchers(
                                 "/swagger-ui.html",
                                 "/swagger-ui/**",
@@ -25,11 +27,14 @@ public class SecurityConfig {
                                 "/college/v3/api-docs/**",
                                 "/student/v3/api-docs/**"
                         ).permitAll()
-                        .pathMatchers("/auth/**").permitAll()
-                        .anyExchange().permitAll()  // all requests allowed; Auth Service handles JWT
+                        .anyExchange().hasRole("ADMIN")
+                )
+
+                .oauth2ResourceServer(spec -> spec
+                        .jwt(jwtSpec -> {
+                        })
                 );
 
         return http.build();
     }
-
 }

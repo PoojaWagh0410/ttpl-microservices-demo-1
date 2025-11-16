@@ -8,10 +8,14 @@ spring:
   main:
     web-application-type: reactive
 
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: http://keycloak:8080/realms/college-student-demo/protocol/openid-connect/certs
+
   cloud:
     gateway:
-      default-filters:
-        - TokenRelay
       routes:
         - id: student-service
           uri: http://student-service:8081
@@ -19,6 +23,7 @@ spring:
             - Path=/student/**
           filters:
             - RemoveRequestHeader=Cookie
+
         - id: college-service
           uri: http://college-service:8082
           predicates:

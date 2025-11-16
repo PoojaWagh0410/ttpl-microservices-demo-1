@@ -39,23 +39,6 @@ services:
     networks:
       - app-network
 
-  auth-service:
-    build:
-      context: ./AuthService
-      dockerfile: Dockerfile
-    image: auth-service:latest
-    container_name: auth-service
-    depends_on:
-      - keycloak
-    environment:
-      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://keycloak:8080/realms/college-student-demo
-      SPRING_APPLICATION_NAME: AuthService
-      SERVER_PORT: 8083
-    ports:
-      - "8083:8083"
-    networks:
-      - app-network
-
   college-service:
     build:
       context: ./CollegeService
@@ -73,7 +56,6 @@ services:
       SPRING_DATASOURCE_PASSWORD: Root@1234
     ports:
       - "8082:8082"
-      - "5052:5052"
     networks:
       - app-network
 
@@ -94,7 +76,6 @@ services:
       SPRING_DATASOURCE_PASSWORD: Root@1234
     ports:
       - "8081:8081"
-      - "5051:5051"
     networks:
       - app-network
 
@@ -107,13 +88,11 @@ services:
     depends_on:
       - student-service
       - college-service
-      - auth-service
     environment:
       - SPRING_PROFILES_ACTIVE=docker
       - SPRING_APPLICATION_NAME=ApiGateway
     ports:
       - "8080:8080"
-      - "5050:5050"
     networks:
       - app-network
 
