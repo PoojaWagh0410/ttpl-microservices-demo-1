@@ -12,20 +12,11 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-
-        JwtAuthenticationConverter jwtConverter = new JwtAuthenticationConverter();
-        jwtConverter.setJwtGrantedAuthoritiesConverter(new KeycloakRoleConverter());
-
         http
-                .csrf(csrf -> csrf.disable())
+                .csrf(csrf -> csrf.disable()) // updated way to disable CSRF
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/student/v3/api-docs", "/student/swagger-ui/**").permitAll()
-                        .anyRequest().hasRole("ADMIN")
-                )
-                .oauth2ResourceServer(oauth2 -> oauth2
-                        .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtConverter))
+                        .anyRequest().permitAll()
                 );
-
         return http.build();
     }
 

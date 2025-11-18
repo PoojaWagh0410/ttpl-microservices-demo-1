@@ -12,17 +12,10 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(csrf -> csrf.disable())
+                .csrf(csrf -> csrf.disable()) // updated way to disable CSRF
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(
-                                "/college/v3/api-docs", "/college/swagger-ui/**"
-                        ).permitAll()
-                        .anyRequest().hasRole("ADMIN")
-                )
-                .oauth2ResourceServer(oauth2 -> oauth2
-                        .jwt()
+                        .anyRequest().permitAll()
                 );
-
         return http.build();
     }
 }

@@ -10,12 +10,6 @@ spring:
       retry:
         enabled: true
 
-  security:
-    oauth2:
-      resourceserver:
-        jwt:
-          jwk-set-uri: http://keycloak:8080/realms/college-student-demo/protocol/openid-connect/certs
-
   datasource:
     url: jdbc:mysql://mysql:3306/college_student_db?useSSL=false&allowPublicKeyRetrieval=true
     username: root

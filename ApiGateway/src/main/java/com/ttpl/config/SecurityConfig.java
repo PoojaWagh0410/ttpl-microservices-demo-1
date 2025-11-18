@@ -5,6 +5,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableReactiveMethodSecurity;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
+import org.springframework.security.oauth2.server.resource.authentication.ReactiveJwtAuthenticationConverterAdapter;
 import org.springframework.security.web.server.SecurityWebFilterChain;
 
 @Configuration
@@ -14,10 +16,18 @@ public class SecurityConfig {
 
     @Bean
     public SecurityWebFilterChain springSecurityFilterChain(ServerHttpSecurity http) {
+
+        // Create JwtAuthenticationConverter and set your converter
+        JwtAuthenticationConverter jwtAuthenticationConverter = new JwtAuthenticationConverter();
+        // setJwtGrantedAuthoritiesConverter expects Converter<Jwt, Collection<GrantedAuthority>>
+        jwtAuthenticationConverter.setJwtGrantedAuthoritiesConverter(new KeycloakRealmRoleConverter());
+
+        ReactiveJwtAuthenticationConverterAdapter reactiveConverter =
+                new ReactiveJwtAuthenticationConverterAdapter(jwtAuthenticationConverter);
+
         http
                 .csrf(csrf -> csrf.disable())
                 .authorizeExchange(exchange -> exchange
-
                         .pathMatchers(
                                 "/swagger-ui.html",
                                 "/swagger-ui/**",
@@ -29,10 +39,10 @@ public class SecurityConfig {
                         ).permitAll()
                         .anyExchange().hasRole("ADMIN")
                 )
-
                 .oauth2ResourceServer(spec -> spec
-                        .jwt(jwtSpec -> {
-                        })
+                        .jwt(jwtSpec -> jwtSpec
+                                .jwtAuthenticationConverter(reactiveConverter)
+                        )
                 );
 
         return http.build();
